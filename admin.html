@@ -9,14 +9,13 @@
         body {background-color: #f0f4f8; color: #333; line-height: 1.6;}
         .container {max-width: 1000px; margin: 0 auto; padding: 20px;}
         header {background: #004d26; color: white; padding: 25px; text-align: center; border-radius: 8px; margin-bottom: 25px;}
-        header h1 {font-size: 24px; margin-bottom: 5px;}
-        header p {font-size: 15px; opacity: 0.9;}
+        header h1 {font-size: 22px; margin-bottom: 5px;}
         h2 {color: #006633; margin-bottom: 20px;}
-        h3 {color: #333; margin: 30px 0 15px; font-size: 18px;}
+        h3 {margin: 30px 0 15px; font-size: 18px;}
         .form-group {margin-bottom: 15px;}
         label {display: block; margin-bottom: 6px; font-weight: 500;}
         input, select, textarea {width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 15px;}
-        button {background: #006633; color: white; border: none; padding: 10px 18px; border-radius: 5px; cursor: pointer; font-size: 15px; transition: 0.3s;}
+        button {background: #006633; color: white; border: none; padding: 10px 18px; border-radius: 5px; cursor: pointer; font-size: 15px;}
         button:hover {background: #005029;}
         .btn-keluar {background: #c0392b; float: right; margin-bottom: 15px;}
         .btn-keluar:hover {background: #a03023;}
@@ -33,7 +32,7 @@
         .login-box {max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
         .baris-aksi {margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd;}
         .baris-aksi select, .baris-aksi input {width: auto; display: inline-block; margin-right: 8px;}
-        .kode-simpan {background: #e8f5e9; padding: 12px; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 20px;}
+        .kode-simpan {background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 20px;}
         @media (max-width: 600px) {
             .baris-aksi select, .baris-aksi input {width: 100%; margin: 5px 0;}
             .baris-aksi button {width: 100%; margin-top: 5px;}
@@ -47,35 +46,29 @@
             <p>Hanya untuk petugas desa — Kelola pengajuan surat masyarakat</p>
         </header>
 
-        <!-- Halaman Login -->
         <div id="halamanLogin">
             <div class="login-box">
                 <h2 style="text-align:center;">Masuk Sistem Admin</h2>
                 <div class="form-group">
                     <label>Nama Pengguna</label>
-                    <input type="text" id="adminUser" placeholder="Masukkan nama pengguna">
+                    <input type="text" id="adminUser" placeholder="admin_desa">
                 </div>
                 <div class="form-group">
                     <label>Kata Sandi</label>
-                    <input type="password" id="adminPass" placeholder="Masukkan kata sandi">
-                </div>
-                <div class="form-group">
-                    <label>Kode Penghubung</label>
-                    <input type="text" id="kodeHubung" placeholder="Diberikan oleh petugas desa">
+                    <input type="password" id="adminPass" placeholder="desa123">
                 </div>
                 <button onclick="loginAdmin()" style="width:100%;">Masuk ke Panel</button>
             </div>
         </div>
 
-        <!-- Halaman Utama Admin -->
         <div id="halamanAdmin" class="hidden">
             <button class="btn-keluar" onclick="keluarAdmin()">Keluar</button>
             
             <div class="kode-simpan">
-                <strong>🔑 Kode Simpan untuk Warga:</strong>
-                <code id="tampilKode" style="background:#fff; padding:4px 8px; margin-left:8px; font-size:14px;"></code>
-                <button onclick="salinKode()" style="padding:4px 10px; font-size:13px; margin-left:8px;">Salin</button>
-                <p style="margin-top:8px; font-size:13px; color:#555;">Berikan kode ini kepada warga agar bisa mengirim pengajuan.</p>
+                <strong>🔑 KODE UNTUK WARGA:</strong>
+                <div style="font-size:18px; font-weight:bold; margin:10px 0; padding:10px; background:#fff; border-radius:4px; text-align:center;" id="kodeWarga"></div>
+                <button onclick="salinKode()">Salin Kode</button>
+                <p style="margin-top:10px; font-size:14px; color:#555;">Berikan kode ini kepada warga agar bisa mengirim pengajuan.</p>
             </div>
             
             <h2>Daftar Semua Pengajuan Surat</h2>
@@ -92,87 +85,30 @@
     <script>
         const penggunaBenar = 'admin_desa';
         const sandiBenar = 'desa123';
-        let gistId = null;
+        const KODE_TETAP = 'JATISARI2026'; // Kode tetap, tidak berubah
 
-        async function ambilData() {
-            if (!gistId) return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
-            try {
-                const res = await fetch(`https://api.github.com/gists/${gistId}`);
-                const data = await res.json();
-                if (data.files && data.files['data.json']) {
-                    return JSON.parse(data.files['data.json'].content);
-                }
-                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
-            } catch {
-                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
-            }
+        function ambilData() {
+            const simpanan = localStorage.getItem('dataPortalSurat');
+            return simpanan ? JSON.parse(simpanan) : { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
         }
 
-        async function buatPenyimpanan() {
-            try {
-                const res = await fetch('https://api.github.com/gists', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        description: 'Data Portal Surat Desa Jatisari',
-                        public: true,
-                        files: {
-                            'data.json': {
-                                content: JSON.stringify({
-                                    daftarPengajuan: [],
-                                    daftarSaran: [],
-                                    nomorUrutan: 1
-                                }, null, 2)
-                            }
-                        }
-                    })
-                });
-                const data = await res.json();
-                gistId = data.id;
-                localStorage.setItem('gistId', gistId);
-                return gistId;
-            } catch (e) {
-                alert('Tidak dapat membuat penyimpanan. Coba buka halaman ini lagi.');
-                return null;
-            }
+        function simpanData(data) {
+            localStorage.setItem('dataPortalSurat', JSON.stringify(data));
+            tampilkanDaftar();
         }
 
-        async function simpanData(data) {
-            if (!gistId) return;
-            try {
-                await fetch(`https://api.github.com/gists/${gistId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        files: { 'data.json': { content: JSON.stringify(data, null, 2) } }
-                    })
-                });
-            } catch (e) {
-                console.error('Gagal menyimpan:', e);
-            }
-        }
-
-        async function loginAdmin() {
+        function loginAdmin() {
             const user = document.getElementById('adminUser').value.trim();
             const sandi = document.getElementById('adminPass').value;
-            const kode = document.getElementById('kodeHubung').value.trim();
             
             if (user === penggunaBenar && sandi === sandiBenar) {
-                if (kode) {
-                    gistId = kode;
-                    localStorage.setItem('gistId', gistId);
-                } else {
-                    gistId = await buatPenyimpanan();
-                    if (!gistId) return;
-                }
-                
                 document.getElementById('halamanLogin').classList.add('hidden');
                 document.getElementById('halamanAdmin').classList.remove('hidden');
-                document.getElementById('tampilKode').textContent = gistId;
+                document.getElementById('kodeWarga').textContent = KODE_TETAP;
                 tampilkanDaftar();
-                setInterval(tampilkanDaftar, 8000);
+                setInterval(tampilkanDaftar, 5000);
             } else {
-                alert('Nama pengguna atau kata sandi salah!');
+                alert('❌ Nama pengguna atau kata sandi salah!\n\nNama: admin_desa\nSandi: desa123');
             }
         }
 
@@ -181,17 +117,16 @@
             document.getElementById('halamanLogin').classList.remove('hidden');
             document.getElementById('adminUser').value = '';
             document.getElementById('adminPass').value = '';
-            document.getElementById('kodeHubung').value = '';
         }
 
         function salinKode() {
-            navigator.clipboard.writeText(gistId).then(() => {
-                alert('✅ Kode disalin! Bagikan kepada warga.');
+            navigator.clipboard.writeText(KODE_TETAP).then(() => {
+                alert('✅ Kode disalin!\n\nKode: ' + KODE_TETAP + '\nBagikan kepada warga.');
             });
         }
 
-        async function tampilkanDaftar() {
-            const data = await ambilData();
+        function tampilkanDaftar() {
+            const data = ambilData();
             const wadah = document.getElementById('daftarPengajuan');
             wadah.innerHTML = '';
             
@@ -242,19 +177,18 @@
             }
         }
 
-        async function ubahStatus(indeks, statusBaru) {
-            const data = await ambilData();
+        function ubahStatus(indeks, statusBaru) {
+            const data = ambilData();
             data.daftarPengajuan[indeks].status = statusBaru;
-            await simpanData(data);
-            tampilkanDaftar();
+            simpanData(data);
         }
 
-        async function simpanCatatan(indeks) {
+        function simpanCatatan(indeks) {
             const isiCatatan = document.getElementById(`catatan-${indeks}`).value;
-            const data = await ambilData();
+            const data = ambilData();
             data.daftarPengajuan[indeks].catatan = isiCatatan;
-            await simpanData(data);
-            alert('✅ Tersimpan! Warga langsung bisa melihat perubahannya.');
+            simpanData(data);
+            alert('✅ Tersimpan!');
         }
     </script>
 </body>
