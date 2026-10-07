@@ -10,12 +10,13 @@
         .container {max-width: 1000px; margin: 0 auto; padding: 20px;}
         header {background: #004d26; color: white; padding: 25px; text-align: center; border-radius: 8px; margin-bottom: 25px;}
         header h1 {font-size: 22px; margin-bottom: 5px;}
+        header p {font-size: 14px; opacity: 0.9;}
         h2 {color: #006633; margin-bottom: 20px;}
         h3 {margin: 30px 0 15px; font-size: 18px;}
         .form-group {margin-bottom: 15px;}
         label {display: block; margin-bottom: 6px; font-weight: 500;}
         input, select, textarea {width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 15px;}
-        button {background: #006633; color: white; border: none; padding: 10px 18px; border-radius: 5px; cursor: pointer; font-size: 15px;}
+        button {background: #006633; color: white; border: none; padding: 10px 18px; border-radius: 5px; cursor: pointer; font-size: 15px; transition: 0.3s;}
         button:hover {background: #005029;}
         .btn-keluar {background: #c0392b; float: right; margin-bottom: 15px;}
         .btn-keluar:hover {background: #a03023;}
@@ -32,7 +33,7 @@
         .login-box {max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
         .baris-aksi {margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd;}
         .baris-aksi select, .baris-aksi input {width: auto; display: inline-block; margin-right: 8px;}
-        .kode-simpan {background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin-bottom: 20px;}
+        .info-koneksi {background: #e3f2fd; padding: 12px; border-radius: 6px; border-left: 4px solid #1976d2; margin-bottom: 20px; font-size: 14px;}
         @media (max-width: 600px) {
             .baris-aksi select, .baris-aksi input {width: 100%; margin: 5px 0;}
             .baris-aksi button {width: 100%; margin-top: 5px;}
@@ -43,9 +44,10 @@
     <div class="container">
         <header>
             <h1>PANEL ADMIN — Pemerintah Desa Jatisari</h1>
-            <p>Hanya untuk petugas desa — Kelola pengajuan surat masyarakat</p>
+            <p>Hanya untuk petugas desa — Kelola Pengajuan Surat Masyarakat</p>
         </header>
 
+        <!-- Halaman Login -->
         <div id="halamanLogin">
             <div class="login-box">
                 <h2 style="text-align:center;">Masuk Sistem Admin</h2>
@@ -61,21 +63,20 @@
             </div>
         </div>
 
+        <!-- Halaman Utama Admin -->
         <div id="halamanAdmin" class="hidden">
             <button class="btn-keluar" onclick="keluarAdmin()">Keluar</button>
             
-            <div class="kode-simpan">
-                <strong>🔑 KODE UNTUK WARGA:</strong>
-                <div style="font-size:18px; font-weight:bold; margin:10px 0; padding:10px; background:#fff; border-radius:4px; text-align:center;" id="kodeWarga"></div>
-                <button onclick="salinKode()">Salin Kode</button>
-                <p style="margin-top:10px; font-size:14px; color:#555;">Berikan kode ini kepada warga agar bisa mengirim pengajuan.</p>
+            <div class="info-koneksi">
+                ⚠️ <strong>Catatan:</strong> Buka halaman warga (<code>index.html</code>) dan halaman admin di <strong>peramban yang sama</strong> agar data saling terbaca.
             </div>
             
             <h2>Daftar Semua Pengajuan Surat</h2>
             <p style="margin-bottom:15px;">Pengajuan terbaru muncul di paling atas 👇</p>
             
             <div id="daftarPengajuan"></div>
-            <p id="belumAda" class="alert alert-info">Belum ada pengajuan masuk dari masyarakat.</p>
+            <p id="belumAda" class="alert alert-info">Belum ada pengajuan masuk dari masyarakat.<br><br>
+            💡 Pastikan halaman warga sudah dibuka di peramban yang sama, lalu kirim pengajuan dari sana.</p>
 
             <h3>Kritik & Saran Masuk</h3>
             <div id="daftarSaran"></div>
@@ -85,18 +86,20 @@
     <script>
         const penggunaBenar = 'admin_desa';
         const sandiBenar = 'desa123';
-        const KODE_TETAP = 'JATISARI2026'; // Kode tetap, tidak berubah
 
+        // === AMBIL DATA ===
         function ambilData() {
             const simpanan = localStorage.getItem('dataPortalSurat');
             return simpanan ? JSON.parse(simpanan) : { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
         }
 
+        // === SIMPAN DATA ===
         function simpanData(data) {
             localStorage.setItem('dataPortalSurat', JSON.stringify(data));
             tampilkanDaftar();
         }
 
+        // === LOGIN ===
         function loginAdmin() {
             const user = document.getElementById('adminUser').value.trim();
             const sandi = document.getElementById('adminPass').value;
@@ -104,14 +107,15 @@
             if (user === penggunaBenar && sandi === sandiBenar) {
                 document.getElementById('halamanLogin').classList.add('hidden');
                 document.getElementById('halamanAdmin').classList.remove('hidden');
-                document.getElementById('kodeWarga').textContent = KODE_TETAP;
                 tampilkanDaftar();
+                // Perbarui otomatis tiap 5 detik
                 setInterval(tampilkanDaftar, 5000);
             } else {
                 alert('❌ Nama pengguna atau kata sandi salah!\n\nNama: admin_desa\nSandi: desa123');
             }
         }
 
+        // === KELUAR ===
         function keluarAdmin() {
             document.getElementById('halamanAdmin').classList.add('hidden');
             document.getElementById('halamanLogin').classList.remove('hidden');
@@ -119,12 +123,7 @@
             document.getElementById('adminPass').value = '';
         }
 
-        function salinKode() {
-            navigator.clipboard.writeText(KODE_TETAP).then(() => {
-                alert('✅ Kode disalin!\n\nKode: ' + KODE_TETAP + '\nBagikan kepada warga.');
-            });
-        }
-
+        // === TAMPILKAN DAFTAR PENGAJUAN ===
         function tampilkanDaftar() {
             const data = ambilData();
             const wadah = document.getElementById('daftarPengajuan');
@@ -161,6 +160,7 @@
                 });
             }
 
+            // Tampilkan Kritik & Saran
             const wadahSaran = document.getElementById('daftarSaran');
             wadahSaran.innerHTML = '';
             if (data.daftarSaran.length === 0) {
@@ -177,18 +177,20 @@
             }
         }
 
+        // === UBAH STATUS ===
         function ubahStatus(indeks, statusBaru) {
             const data = ambilData();
             data.daftarPengajuan[indeks].status = statusBaru;
             simpanData(data);
         }
 
+        // === SIMPAN CATATAN ===
         function simpanCatatan(indeks) {
             const isiCatatan = document.getElementById(`catatan-${indeks}`).value;
             const data = ambilData();
             data.daftarPengajuan[indeks].catatan = isiCatatan;
             simpanData(data);
-            alert('✅ Tersimpan!');
+            alert('✅ Tersimpan! Warga bisa melihat perubahan ini.');
         }
     </script>
 </body>
