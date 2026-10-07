@@ -35,7 +35,6 @@
         .hidden {display: none !important;}
         footer {text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 14px;}
         small {color: #666;}
-        .kotak-kode {background: #fff3cd; padding: 20px; border-radius: 6px; border-left: 4px solid #ffc107; margin-bottom: 20px;}
         @media (max-width: 600px) {
             .baris1 {font-size: 26px;}
             .baris2 {font-size: 18px;}
@@ -56,120 +55,109 @@
             <div class="baris4">JATISARI MENUJU YANG LEBIH BAIK</div>
         </header>
 
-        <div id="halamanKode" class="kotak-kode">
-            <h3>🔑 Masukkan Kode Akses</h3>
-            <p style="margin:10px 0;">Minta kode kepada petugas desa</p>
-            <div class="form-group">
-                <label>Kode Akses</label>
-                <input type="text" id="kodeAkses" placeholder="Masukkan kode dari desa">
-            </div>
-            <button onclick="cekKode()">Masuk</button>
+        <div class="tab">
+            <button class="tablinks active" onclick="bukaTab(event, 'Pengajuan')">Ajukan Surat</button>
+            <button class="tablinks" onclick="bukaTab(event, 'CekStatus')">Cek Status</button>
+            <button class="tablinks" onclick="bukaTab(event, 'KritikSaran')">Saran</button>
         </div>
 
-        <div id="halamanUtama" class="hidden">
-            <div class="tab">
-                <button class="tablinks active" onclick="bukaTab(event, 'Pengajuan')">Ajukan Surat</button>
-                <button class="tablinks" onclick="bukaTab(event, 'CekStatus')">Cek Status</button>
-                <button class="tablinks" onclick="bukaTab(event, 'KritikSaran')">Saran</button>
-            </div>
-
-            <div id="Pengajuan" class="tabcontent active">
-                <h2>Formulir Pengajuan Surat</h2>
-                <form id="formPengajuan">
-                    <div class="form-group">
-                        <label>Jenis Surat yang Diajukan *</label>
-                        <select id="jenisSurat" required onchange="tampilkanKeteranganLainnya()">
-                            <option value="">-- Pilih Jenis Surat --</option>
-                            <option value="Surat Keterangan Domisili">Surat Keterangan Domisili</option>
-                            <option value="Surat Keterangan Usaha">Surat Keterangan Usaha</option>
-                            <option value="Surat Keterangan Beda Identitas">Surat Keterangan Beda Identitas</option>
-                            <option value="Surat Keterangan Belum Menikah">Surat Keterangan Belum Menikah</option>
-                            <option value="Surat Keterangan Penghasilan">Surat Keterangan Penghasilan</option>
-                            <option value="SKTM">Surat Keterangan Tidak Mampu (SKTM)</option>
-                            <option value="Surat Keterangan Lainnya">Surat Keterangan Lainnya</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group hidden" id="kolomKeteranganLainnya">
-                        <label>Keterangan Surat *</label>
-                        <input type="text" id="keteranganLainnya" placeholder="Contoh: Surat Keterangan Berkelakuan Baik">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Nama Lengkap Pemohon *</label>
-                        <input type="text" id="nama" placeholder="Nama lengkap sesuai KTP" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Alamat Lengkap *</label>
-                        <textarea id="alamat" rows="3" placeholder="RT/RW, Dusun, Desa" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Nomor WhatsApp / HP *</label>
-                        <input type="tel" id="noHp" placeholder="Contoh: 0812xxxxxxxx" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Keperluan Surat *</label>
-                        <textarea id="keperluan" rows="3" placeholder="Untuk keperluan apa surat ini dibuat" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Unggah Foto Kartu Keluarga (KK) *</label>
-                        <input type="file" id="fotoKK" accept="image/*" required>
-                        <small>Format: JPG/PNG, maksimal 2MB</small>
-                    </div>
-
-                    <button type="submit">Kirim Pengajuan</button>
-                </form>
-
-                <div id="notifBerhasil" class="alert alert-success hidden">
-                    <h3>✅ Berhasil Dikirim!</h3>
-                    <p>Nomor Pengajuan: <strong id="nomorPengajuan"></strong></p>
-                    <p>Silakan cek status di tab "Cek Status" di atas 👆</p>
-                </div>
-            </div>
-
-            <div id="CekStatus" class="tabcontent">
-                <h2>Cek Status Pengajuan</h2>
-                <p style="margin-bottom:15px;">Masukkan nomor pengajuan Anda:</p>
+        <div id="Pengajuan" class="tabcontent active">
+            <h2>Formulir Pengajuan Surat</h2>
+            <form id="formPengajuan">
                 <div class="form-group">
-                    <label>Nomor Pengajuan *</label>
-                    <input type="text" id="inputNomor" placeholder="Contoh: PJM-2026-0001">
+                    <label>Jenis Surat yang Diajukan *</label>
+                    <select id="jenisSurat" required onchange="tampilkanKeteranganLainnya()">
+                        <option value="">-- Pilih Jenis Surat --</option>
+                        <option value="Surat Keterangan Domisili">Surat Keterangan Domisili</option>
+                        <option value="Surat Keterangan Usaha">Surat Keterangan Usaha</option>
+                        <option value="Surat Keterangan Beda Identitas">Surat Keterangan Beda Identitas</option>
+                        <option value="Surat Keterangan Belum Menikah">Surat Keterangan Belum Menikah</option>
+                        <option value="Surat Keterangan Penghasilan">Surat Keterangan Penghasilan</option>
+                        <option value="SKTM">Surat Keterangan Tidak Mampu (SKTM)</option>
+                        <option value="Surat Keterangan Lainnya">Surat Keterangan Lainnya</option>
+                    </select>
                 </div>
-                <button class="btn" onclick="cekStatus()">Lihat Status</button>
 
-                <div id="hasilStatus" class="hidden" style="margin-top:25px;">
-                    <h3>Detail Pengajuan</h3>
-                    <div class="card">
-                        <p><strong>Nomor:</strong> <span id="dNomor"></span></p>
-                        <p><strong>Jenis Surat:</strong> <span id="dJenis"></span></p>
-                        <p id="dKeteranganLainnyaWadah" class="hidden"><strong>Keterangan:</strong> <span id="dKeteranganLainnya"></span></p>
-                        <p><strong>Nama Pemohon:</strong> <span id="dNama"></span></p>
-                        <p><strong>Tanggal Diajukan:</strong> <span id="dTanggal"></span></p>
-                        <p><strong>Status:</strong> <span id="dStatus" class="status"></span></p>
-                        <p id="dCatatanWadah" class="hidden"><strong>Catatan Petugas:</strong> <span id="dCatatan"></span></p>
-                    </div>
+                <div class="form-group hidden" id="kolomKeteranganLainnya">
+                    <label>Keterangan Surat *</label>
+                    <input type="text" id="keteranganLainnya" placeholder="Contoh: Surat Keterangan Berkelakuan Baik">
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Lengkap Pemohon *</label>
+                    <input type="text" id="nama" placeholder="Nama lengkap sesuai KTP" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat Lengkap *</label>
+                    <textarea id="alamat" rows="3" placeholder="RT/RW, Dusun, Desa" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Nomor WhatsApp / HP *</label>
+                    <input type="tel" id="noHp" placeholder="Contoh: 0812xxxxxxxx" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Keperluan Surat *</label>
+                    <textarea id="keperluan" rows="3" placeholder="Untuk keperluan apa surat ini dibuat" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Unggah Foto Kartu Keluarga (KK) *</label>
+                    <input type="file" id="fotoKK" accept="image/*" required>
+                    <small>Format: JPG/PNG, maksimal 2MB</small>
+                </div>
+
+                <button type="submit">Kirim Pengajuan</button>
+            </form>
+
+            <div id="notifBerhasil" class="alert alert-success hidden">
+                <h3>✅ Berhasil Dikirim!</h3>
+                <p>Nomor Pengajuan: <strong id="nomorPengajuan"></strong></p>
+                <p>Simpan nomor ini untuk mengecek status nanti.</p>
+                <p>Silakan cek status di tab "Cek Status" di atas 👆</p>
+            </div>
+        </div>
+
+        <div id="CekStatus" class="tabcontent">
+            <h2>Cek Status Pengajuan</h2>
+            <p style="margin-bottom:15px;">Masukkan nomor pengajuan Anda:</p>
+            <div class="form-group">
+                <label>Nomor Pengajuan *</label>
+                <input type="text" id="inputNomor" placeholder="Contoh: PJM-2026-0001">
+            </div>
+            <button class="btn" onclick="cekStatus()">Lihat Status</button>
+
+            <div id="hasilStatus" class="hidden" style="margin-top:25px;">
+                <h3>Detail Pengajuan</h3>
+                <div class="card">
+                    <p><strong>Nomor:</strong> <span id="dNomor"></span></p>
+                    <p><strong>Jenis Surat:</strong> <span id="dJenis"></span></p>
+                    <p id="dKeteranganLainnyaWadah" class="hidden"><strong>Keterangan:</strong> <span id="dKeteranganLainnya"></span></p>
+                    <p><strong>Nama Pemohon:</strong> <span id="dNama"></span></p>
+                    <p><strong>Tanggal Diajukan:</strong> <span id="dTanggal"></span></p>
+                    <p><strong>Status:</strong> <span id="dStatus" class="status"></span></p>
+                    <p id="dCatatanWadah" class="hidden"><strong>Catatan Petugas:</strong> <span id="dCatatan"></span></p>
                 </div>
             </div>
+        </div>
 
-            <div id="KritikSaran" class="tabcontent">
-                <h2>Kritik & Saran</h2>
-                <form id="formSaran">
-                    <div class="form-group">
-                        <label>Nama (Boleh Dikosongkan)</label>
-                        <input type="text" id="namaSaran" placeholder="Nama Anda">
-                    </div>
-                    <div class="form-group">
-                        <label>Pesan *</label>
-                        <textarea id="isiSaran" rows="5" placeholder="Tuliskan saran atau keluhan Anda" required></textarea>
-                    </div>
-                    <button type="submit">Kirim Saran</button>
-                </form>
-                <div id="notifSaranBerhasil" class="alert alert-success hidden" style="margin-top:15px;">
-                    ✅ Terima kasih atas masukan Anda!
+        <div id="KritikSaran" class="tabcontent">
+            <h2>Kritik & Saran</h2>
+            <form id="formSaran">
+                <div class="form-group">
+                    <label>Nama (Boleh Dikosongkan)</label>
+                    <input type="text" id="namaSaran" placeholder="Nama Anda">
                 </div>
+                <div class="form-group">
+                    <label>Pesan *</label>
+                    <textarea id="isiSaran" rows="5" placeholder="Tuliskan saran atau keluhan Anda" required></textarea>
+                </div>
+                <button type="submit">Kirim Saran</button>
+            </form>
+            <div id="notifSaranBerhasil" class="alert alert-success hidden" style="margin-top:15px;">
+                ✅ Terima kasih atas masukan Anda!
             </div>
         </div>
 
@@ -179,19 +167,6 @@
     </div>
 
     <script>
-        const KODE_BENAR = 'JATISARI2026';
-
-        function cekKode() {
-            const kode = document.getElementById('kodeAkses').value.trim();
-            if (kode === KODE_BENAR) {
-                localStorage.setItem('sudahMasuk', 'ya');
-                document.getElementById('halamanKode').classList.add('hidden');
-                document.getElementById('halamanUtama').classList.remove('hidden');
-            } else {
-                alert('❌ Kode salah! Minta kode terbaru kepada petugas desa.');
-            }
-        }
-
         function ambilData() {
             const simpanan = localStorage.getItem('dataPortalSurat');
             return simpanan ? JSON.parse(simpanan) : { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
@@ -259,7 +234,7 @@
             
             setTimeout(() => {
                 document.getElementById('notifBerhasil').classList.add('hidden');
-            }, 15000);
+            }, 20000);
         });
 
         function cekStatus() {
@@ -314,13 +289,6 @@
             document.getElementById('notifSaranBerhasil').classList.remove('hidden');
             setTimeout(() => document.getElementById('notifSaranBerhasil').classList.add('hidden'), 5000);
         });
-
-        window.onload = function() {
-            if (localStorage.getItem('sudahMasuk') === 'ya') {
-                document.getElementById('halamanKode').classList.add('hidden');
-                document.getElementById('halamanUtama').classList.remove('hidden');
-            }
-        };
     </script>
 </body>
 </html>
