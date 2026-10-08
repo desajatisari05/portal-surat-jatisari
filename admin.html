@@ -28,12 +28,12 @@
         .status-ditolak {background: #f8d7da; color: #721c24;}
         .alert {padding: 15px; border-radius: 6px; margin-bottom: 15px;}
         .alert-info {background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8;}
-        .alert-success {background: #d4edda; color: #155724; border-left: 4px solid #28a745;}
         .hidden {display: none !important;}
         .login-box {max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
         .baris-aksi {margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd;}
         .baris-aksi select, .baris-aksi input {width: auto; display: inline-block; margin-right: 8px;}
-        .info-koneksi {background: #e3f2fd; padding: 12px; border-radius: 6px; border-left: 4px solid #1976d2; margin-bottom: 20px; font-size: 14px;}
+        .info-pusat {background: #e3f2fd; padding: 12px; border-radius: 6px; border-left: 4px solid #1976d2; margin-bottom: 20px; font-size: 14px;}
+        .terakhir {font-size: 13px; color: #666; margin-bottom: 10px;}
         @media (max-width: 600px) {
             .baris-aksi select, .baris-aksi input {width: 100%; margin: 5px 0;}
             .baris-aksi button {width: 100%; margin-top: 5px;}
@@ -47,7 +47,6 @@
             <p>Hanya untuk petugas desa — Kelola Pengajuan Surat Masyarakat</p>
         </header>
 
-        <!-- Halaman Login -->
         <div id="halamanLogin">
             <div class="login-box">
                 <h2 style="text-align:center;">Masuk Sistem Admin</h2>
@@ -63,20 +62,18 @@
             </div>
         </div>
 
-        <!-- Halaman Utama Admin -->
         <div id="halamanAdmin" class="hidden">
             <button class="btn-keluar" onclick="keluarAdmin()">Keluar</button>
             
-            <div class="info-koneksi">
-                ⚠️ <strong>Catatan:</strong> Buka halaman warga (<code>index.html</code>) dan halaman admin di <strong>peramban yang sama</strong> agar data saling terbaca.
+            <div class="info-pusat">
+                ✅ <strong>Terhubung ke data pusat</strong> — Pengajuan dari HP mana saja langsung muncul di sini
             </div>
             
             <h2>Daftar Semua Pengajuan Surat</h2>
-            <p style="margin-bottom:15px;">Pengajuan terbaru muncul di paling atas 👇</p>
+            <p class="terakhir">Pengajuan terbaru muncul di paling atas ↓ &nbsp; Diperbarui otomatis tiap 10 detik</p>
             
             <div id="daftarPengajuan"></div>
-            <p id="belumAda" class="alert alert-info">Belum ada pengajuan masuk dari masyarakat.<br><br>
-            💡 Pastikan halaman warga sudah dibuka di peramban yang sama, lalu kirim pengajuan dari sana.</p>
+            <p id="belumAda" class="alert alert-info">Belum ada pengajuan masuk dari masyarakat.</p>
 
             <h3>Kritik & Saran Masuk</h3>
             <div id="daftarSaran"></div>
@@ -87,16 +84,44 @@
         const penggunaBenar = 'admin_desa';
         const sandiBenar = 'desa123';
 
-        // === AMBIL DATA ===
-        function ambilData() {
-            const simpanan = localStorage.getItem('dataPortalSurat');
-            return simpanan ? JSON.parse(simpanan) : { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+        // === KODE PENGHUBUNG ===
+        const GIST_ID = '563dd468d80f50e9ac180b7ebc27657e';
+        const GIST_API = 'https://api.github.com/gists/' + GIST_ID;
+
+        // === AMBIL DATA DARI PUSAT ===
+        async function ambilData() {
+            try {
+                const res = await fetch(GIST_API);
+                const data = await res.json();
+                if (data.files && data.files['data.json']) {
+                    return JSON.parse(data.files['data.json'].content);
+                }
+                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+            } catch {
+                console.log('Gagal ambil data');
+                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+            }
         }
 
-        // === SIMPAN DATA ===
-        function simpanData(data) {
-            localStorage.setItem('dataPortalSurat', JSON.stringify(data));
-            tampilkanDaftar();
+        // === SIMPAN DATA KE PUSAT ===
+        async function simpanData(data) {
+            try {
+                await fetch(GIST_API, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: {
+                            'data.json': {
+                                content: JSON.stringify(data, null, 2)
+                            }
+                        }
+                    })
+                });
+                return true;
+            } catch {
+                alert('⚠️ Gagal menyimpan. Coba lagi.');
+                return false;
+            }
         }
 
         // === LOGIN ===
@@ -108,10 +133,9 @@
                 document.getElementById('halamanLogin').classList.add('hidden');
                 document.getElementById('halamanAdmin').classList.remove('hidden');
                 tampilkanDaftar();
-                // Perbarui otomatis tiap 5 detik
-                setInterval(tampilkanDaftar, 5000);
+                setInterval(tampilkanDaftar, 10000); // Perbarui otomatis tiap 10 detik
             } else {
-                alert('❌ Nama pengguna atau kata sandi salah!\n\nNama: admin_desa\nSandi: desa123');
+                alert('❌ Nama pengguna atau kata sandi salah!');
             }
         }
 
@@ -123,9 +147,9 @@
             document.getElementById('adminPass').value = '';
         }
 
-        // === TAMPILKAN DAFTAR PENGAJUAN ===
-        function tampilkanDaftar() {
-            const data = ambilData();
+        // === TAMPILKAN DAFTAR ===
+        async function tampilkanDaftar() {
+            const data = await ambilData();
             const wadah = document.getElementById('daftarPengajuan');
             wadah.innerHTML = '';
             
@@ -138,7 +162,7 @@
                     kartu.className = 'card';
                     let bagianKeterangan = p.keteranganLainnya ? `<p><strong>Keterangan:</strong> ${p.keteranganLainnya}</p>` : '';
                     kartu.innerHTML = `
-                        <p style="font-size:15px;"><strong>${p.nomor}</strong> — ${p.jenis}</p>
+                        <p style="font-size:15px; font-weight:bold;">${p.nomor} — ${p.jenis}</p>
                         ${bagianKeterangan}
                         <p>Pemohon: ${p.nama} | ${p.noHp}</p>
                         <p>Alamat: ${p.alamat}</p>
@@ -147,20 +171,20 @@
                         <p>Status: <span class="status ${p.status==='Menunggu'?'status-menunggu':p.status==='Disetujui'?'status-disetujui':'status-ditolak'}">${p.status}</span></p>
                         ${p.catatan ? `<p><strong>Catatan:</strong> ${p.catatan}</p>` : ''}
                         <div class="baris-aksi">
-                            <select onchange="ubahStatus(${indeks}, this.value)" style="padding:8px;">
+                            <select id="status-${indeks}" style="padding:8px;">
                                 <option value="Menunggu" ${p.status==='Menunggu'?'selected':''}>Menunggu</option>
                                 <option value="Disetujui" ${p.status==='Disetujui'?'selected':''}>Disetujui — Surat Siap Diambil</option>
                                 <option value="Ditolak" ${p.status==='Ditolak'?'selected':''}>Ditolak</option>
                             </select>
-                            <input type="text" placeholder="Catatan jika perlu" id="catatan-${indeks}" value="${p.catatan}" style="padding:8px;">
-                            <button class="btn-simpan" onclick="simpanCatatan(${indeks})">Simpan</button>
+                            <input type="text" id="catatan-${indeks}" value="${p.catatan||''}" placeholder="Catatan jika perlu" style="padding:8px;">
+                            <button class="btn-simpan" onclick="simpanPerubahan(${indeks})">Simpan</button>
                         </div>
                     `;
                     wadah.appendChild(kartu);
                 });
             }
 
-            // Tampilkan Kritik & Saran
+            // Tampilkan Saran
             const wadahSaran = document.getElementById('daftarSaran');
             wadahSaran.innerHTML = '';
             if (data.daftarSaran.length === 0) {
@@ -177,20 +201,16 @@
             }
         }
 
-        // === UBAH STATUS ===
-        function ubahStatus(indeks, statusBaru) {
-            const data = ambilData();
-            data.daftarPengajuan[indeks].status = statusBaru;
-            simpanData(data);
-        }
-
-        // === SIMPAN CATATAN ===
-        function simpanCatatan(indeks) {
-            const isiCatatan = document.getElementById(`catatan-${indeks}`).value;
-            const data = ambilData();
-            data.daftarPengajuan[indeks].catatan = isiCatatan;
-            simpanData(data);
-            alert('✅ Tersimpan! Warga bisa melihat perubahan ini.');
+        // === SIMPAN PERUBAHAN STATUS ===
+        async function simpanPerubahan(indeks) {
+            const data = await ambilData();
+            data.daftarPengajuan[indeks].status = document.getElementById(`status-${indeks}`).value;
+            data.daftarPengajuan[indeks].catatan = document.getElementById(`catatan-${indeks}`).value;
+            
+            if (await simpanData(data)) {
+                alert('✅ Tersimpan! Warga bisa melihat perubahan ini.');
+                tampilkanDaftar();
+            }
         }
     </script>
 </body>
