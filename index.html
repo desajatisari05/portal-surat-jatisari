@@ -35,6 +35,7 @@
         .hidden {display: none !important;}
         footer {text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 14px;}
         small {color: #666;}
+        .memuat {text-align: center; padding: 20px; color: #666;}
         @media (max-width: 600px) {
             .baris1 {font-size: 26px;}
             .baris2 {font-size: 18px;}
@@ -103,20 +104,14 @@
                     <textarea id="keperluan" rows="3" placeholder="Untuk keperluan apa surat ini dibuat" required></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>Unggah Foto Kartu Keluarga (KK) *</label>
-                    <input type="file" id="fotoKK" accept="image/*" required>
-                    <small>Format: JPG/PNG, maksimal 2MB</small>
-                </div>
-
                 <button type="submit">Kirim Pengajuan</button>
             </form>
 
             <div id="notifBerhasil" class="alert alert-success hidden">
                 <h3>✅ Berhasil Dikirim!</h3>
                 <p>Nomor Pengajuan: <strong id="nomorPengajuan"></strong></p>
-                <p>Simpan nomor ini untuk mengecek status nanti.</p>
-                <p>Silakan cek status di tab "Cek Status" di atas 👆</p>
+                <p>Simpan nomor ini untuk mengecek status.</p>
+                <p>Datang ke kantor desa setelah status berubah menjadi "Disetujui".</p>
             </div>
         </div>
 
@@ -167,15 +162,47 @@
     </div>
 
     <script>
-        function ambilData() {
-            const simpanan = localStorage.getItem('dataPortalSurat');
-            return simpanan ? JSON.parse(simpanan) : { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+        // === KODE PENGHUBUNG ===
+        const GIST_ID = '563dd468d80f50e9ac180b7ebc27657e';
+        const GIST_API = 'https://api.github.com/gists/' + GIST_ID;
+
+        // === AMBIL DATA DARI PUSAT ===
+        async function ambilData() {
+            try {
+                const res = await fetch(GIST_API);
+                const data = await res.json();
+                if (data.files && data.files['data.json']) {
+                    return JSON.parse(data.files['data.json'].content);
+                }
+                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+            } catch {
+                alert('⚠️ Tidak dapat terhubung ke server. Coba lagi sebentar.');
+                return { daftarPengajuan: [], daftarSaran: [], nomorUrutan: 1 };
+            }
         }
 
-        function simpanData(data) {
-            localStorage.setItem('dataPortalSurat', JSON.stringify(data));
+        // === SIMPAN DATA KE PUSAT ===
+        async function simpanData(data) {
+            try {
+                await fetch(GIST_API, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: {
+                            'data.json': {
+                                content: JSON.stringify(data, null, 2)
+                            }
+                        }
+                    })
+                });
+                return true;
+            } catch {
+                alert('⚠️ Gagal menyimpan. Coba lagi.');
+                return false;
+            }
         }
 
+        // === TAMPILKAN KOLOM KETERANGAN LAINNYA ===
         function tampilkanKeteranganLainnya() {
             const jenis = document.getElementById('jenisSurat').value;
             const kolom = document.getElementById('kolomKeteranganLainnya');
@@ -188,6 +215,7 @@
             }
         }
 
+        // === BUKA TAB ===
         function bukaTab(evt, namaTab) {
             let tabcontent = document.getElementsByClassName("tabcontent");
             for (let i = 0; i < tabcontent.length; i++) {
@@ -201,10 +229,11 @@
             evt.currentTarget.classList.add("active");
         }
 
-        document.getElementById('formPengajuan').addEventListener('submit', function(e) {
+        // === KIRIM PENGAJUAN ===
+        document.getElementById('formPengajuan').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const data = ambilData();
+            const data = await ambilData();
             const nomor = `PJM-${new Date().getFullYear()}-${String(data.nomorUrutan).padStart(4, '0')}`;
             const jenisSurat = document.getElementById('jenisSurat').value;
             
@@ -223,23 +252,23 @@
             
             data.daftarPengajuan.unshift(pengajuanBaru);
             data.nomorUrutan += 1;
-            simpanData(data);
             
-            document.getElementById('nomorPengajuan').textContent = nomor;
-            document.getElementById('inputNomor').value = nomor;
-            document.getElementById('notifBerhasil').classList.remove('hidden');
-            
-            this.reset();
-            document.getElementById('kolomKeteranganLainnya').classList.add('hidden');
-            
-            setTimeout(() => {
-                document.getElementById('notifBerhasil').classList.add('hidden');
-            }, 20000);
+            if (await simpanData(data)) {
+                document.getElementById('nomorPengajuan').textContent = nomor;
+                document.getElementById('inputNomor').value = nomor;
+                document.getElementById('notifBerhasil').classList.remove('hidden');
+                this.reset();
+                document.getElementById('kolomKeteranganLainnya').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('notifBerhasil').classList.add('hidden');
+                }, 20000);
+            }
         });
 
-        function cekStatus() {
+        // === CEK STATUS ===
+        async function cekStatus() {
             const nomorDicari = document.getElementById('inputNomor').value.trim();
-            const data = ambilData();
+            const data = await ambilData();
             const hasil = data.daftarPengajuan.find(p => p.nomor === nomorDicari);
             
             if (hasil) {
@@ -276,18 +305,20 @@
             }
         }
 
-        document.getElementById('formSaran').addEventListener('submit', function(e) {
+        // === KIRIM SARAN ===
+        document.getElementById('formSaran').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const data = ambilData();
+            const data = await ambilData();
             data.daftarSaran.unshift({
                 nama: document.getElementById('namaSaran').value || 'Anonim',
                 isi: document.getElementById('isiSaran').value,
                 tanggal: new Date().toLocaleDateString('id-ID')
             });
-            simpanData(data);
-            this.reset();
-            document.getElementById('notifSaranBerhasil').classList.remove('hidden');
-            setTimeout(() => document.getElementById('notifSaranBerhasil').classList.add('hidden'), 5000);
+            if (await simpanData(data)) {
+                this.reset();
+                document.getElementById('notifSaranBerhasil').classList.remove('hidden');
+                setTimeout(() => document.getElementById('notifSaranBerhasil').classList.add('hidden'), 5000);
+            }
         });
     </script>
 </body>
